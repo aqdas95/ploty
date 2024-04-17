@@ -1,6 +1,8 @@
 defmodule PlotyWeb.Router do
   use PlotyWeb, :router
 
+  import PlotyWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule PlotyWeb.Router do
     plug :put_root_layout, html: {PlotyWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -15,7 +18,7 @@ defmodule PlotyWeb.Router do
   end
 
   scope "/", PlotyWeb do
-    pipe_through :browser
+    pipe_through [:browser, :require_authenticated_user]
 
     get "/", PageController, :home
   end
@@ -39,6 +42,44 @@ defmodule PlotyWeb.Router do
 
       live_dashboard "/dashboard", metrics: PlotyWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", PlotyWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{PlotyWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/users/register", Auth.UserRegistrationLive, :new
+      live "/users/log_in", Auth.UserLoginLive, :new
+      live "/users/reset_password", Auth.UserForgotPasswordLive, :new
+      live "/users/reset_password/:token", Auth.UserResetPasswordLive, :edit
+    end
+
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", PlotyWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{PlotyWeb.UserAuth, :ensure_authenticated}] do
+      live "/users/settings", Auth.UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", Auth.UserSettingsLive, :confirm_email
+    end
+  end
+
+  scope "/", PlotyWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+
+    live_session :current_user,
+      on_mount: [{PlotyWeb.UserAuth, :mount_current_user}] do
+      live "/users/confirm/:token", Auth.UserConfirmationLive, :edit
+      live "/users/confirm", Auth.UserConfirmationInstructionsLive, :new
     end
   end
 end
