@@ -1,32 +1,46 @@
-<header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <div class="flex items-center gap-4">
-      <a href="/">
-        <img src={~p"/images/logo.svg"} width="36" />
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v<%= Application.spec(:phoenix, :vsn) %>
-      </p>
+<main class="top-0 bottom-0 flex w-screen h-screen overflow-hidden">
+  <div class="flex flex-col justify-between p-4 w-[15%] bg-zinc-900  text-white/50 font-semibold overflow-hidden">
+    <div class="flex flex-col">
+      <.link class="w-full p-1 pb-6">
+        <img src={~p"/images/logo.svg"} width="55" />
+      </.link>
+      <.link class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white">
+        <.icon name="hero-home" class="w-6 h-6 mr-4" /> Your plots
+      </.link>
+      <.link class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white">
+        <.icon name="hero-users" class="w-6 h-6 mr-4" /> Shared with you
+      </.link>
     </div>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <a href="https://twitter.com/elixirphoenix" class="hover:text-zinc-700">
-        @elixirphoenix
-      </a>
-      <a href="https://github.com/phoenixframework/phoenix" class="hover:text-zinc-700">
-        GitHub
-      </a>
-      <a
-        href="https://hexdocs.pm/phoenix/overview.html"
-        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+    <div :if={@current_user} class="flex flex-col border-t-2 border-white/50">
+      <div class="flex items-center justify-around w-full px-1 py-2 my-2">
+        <div class="font-bold text-white/60"><%= @current_user.email %></div>
+      </div>
+      <.link
+        href={~p"/users/settings"}
+        class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white"
       >
-        Get Started <span aria-hidden="true">&rarr;</span>
-      </a>
+        <.icon name="hero-cog-6-tooth" class="w-6 h-6 mr-4" /> Settings
+      </.link>
+      <.link
+        href={~p"/users/log_out"}
+        method="delete"
+        class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white"
+      >
+        <.icon name="hero-arrow-left-end-on-rectangle" class="w-6 h-6 mr-4" /> Log out
+      </.link>
     </div>
   </div>
-</header>
-<main class="px-4 py-20 sm:px-6 lg:px-8">
-  <div class="mx-auto max-w-2xl">
-    <.flash_group flash={@flash} />
-    <%= @inner_content %>
+  <div class="flex flex-col h-screen w-[85%] overflow-hidden">
+    <.header class="z-50 p-4 border-b-2 border-gray-200">
+      <%= if Map.has_key?(assigns, :page_title) do %>
+        <%= @page_title %>
+      <% else %>
+        Ploty
+      <% end %>
+    </.header>
+    <section class="flex flex-1 p-4 overflow-y-auto">
+      <.flash_group flash={@flash} />
+      <%= @inner_content %>
+    </section>
   </div>
 </main>

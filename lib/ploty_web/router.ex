@@ -51,6 +51,7 @@ defmodule PlotyWeb.Router do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
     live_session :redirect_if_user_is_authenticated,
+      layout: false,
       on_mount: [{PlotyWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/users/register", Auth.UserRegistrationLive, :new
       live "/users/log_in", Auth.UserLoginLive, :new

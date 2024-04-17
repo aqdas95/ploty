@@ -6,6 +6,7 @@ defmodule PlotyWeb.Auth.UserResetPasswordLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-sm mx-auto">
+      <.flash_group flash={@flash} />
       <.header class="text-center">Reset Password</.header>
 
       <.simple_form

@@ -4,6 +4,7 @@ defmodule PlotyWeb.Auth.UserLoginLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-sm mx-auto">
+      <.flash_group flash={@flash} />
       <.header class="text-center">
         Log in to account
         <:subtitle>

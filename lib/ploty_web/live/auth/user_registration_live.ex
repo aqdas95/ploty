@@ -7,6 +7,7 @@ defmodule PlotyWeb.Auth.UserRegistrationLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-sm mx-auto">
+      <.flash_group flash={@flash} />
       <.header class="text-center">
         Register for an account
         <:subtitle>
