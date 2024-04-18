@@ -39,7 +39,7 @@ defmodule PlotyWeb.PlotLive.FormComponent do
             <:loading>Waiting for Preview</:loading>
             <:failed :let={reason}><%= reason %></:failed>
 
-            <.histogram :if={plots} id={987_789} series={plots} />
+            <.histogram :if={plots} id={0} series={plots} />
           </.async_result>
         </div>
 
@@ -76,29 +76,13 @@ defmodule PlotyWeb.PlotLive.FormComponent do
       |> Plots.change_plot(plot_params)
       |> Map.put(:action, :validate)
 
-    # If change is only in name then don't re-render
-
-    # if target == ["plot", "name"] do
-    #   {:noreply,
-    #    socket
-    #    |> assign_form(changeset)}
-    # else
-    #   plot = Map.merge(socket.assigns.plot, changeset.changes)
-
-    #   {:noreply,
-    #    socket
-    #    |> assign_form(changeset)
-    #    |> assign(:plots, AsyncResult.loading())
-    #    |> fetch_data(plot)}
-    # end
-
     plot = Map.merge(socket.assigns.plot, changeset.changes)
 
     {:noreply,
      socket
      |> assign_form(changeset)
      |> assign(:plots, AsyncResult.loading())
-     |> fetch_data(plot)}
+     |> start_async(:fetch_data, fn -> Plots.fetch_plot_data(plot) end)}
   end
 
   def handle_event("save", %{"plot" => _plot_params}, socket) do
@@ -128,38 +112,6 @@ defmodule PlotyWeb.PlotLive.FormComponent do
      socket
      |> assign(:plots, AsyncResult.failed(plots, reason))
      |> assign_form(changeset)}
-  end
-
-  defp fetch_data(socket, plot) do
-    socket
-    |> start_async(:fetch_data, fn ->
-      "https://raw.githubusercontent.com/plotly/datasets/master/#{plot.dataset}.csv"
-      |> HTTPoison.get()
-      |> case do
-        {:ok, %HTTPoison.Response{status_code: 200} = resp} ->
-          [headers | data] = resp.body |> String.trim() |> String.split("\n")
-
-          needed_index =
-            headers
-            |> String.split(",")
-            |> Enum.find_index(&(String.trim(&1) == plot.expression))
-
-          if is_nil(needed_index) do
-            {:error, "invalid expression value"}
-          else
-            result =
-              Enum.map(
-                data,
-                &(String.split(&1, ",") |> Enum.at(needed_index) |> String.trim())
-              )
-
-            {:ok, result}
-          end
-
-        _ ->
-          {:error, "invalid dataset value"}
-      end
-    end)
   end
 
   defp save_plot(socket, :edit, plot_params) do
