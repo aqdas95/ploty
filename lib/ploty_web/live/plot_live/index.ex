@@ -20,6 +20,12 @@ defmodule PlotyWeb.PlotLive.Index do
     |> assign(:plot, Plots.get_plot!(id))
   end
 
+  defp apply_action(socket, :share, %{"id" => id}) do
+    socket
+    |> assign(:page_title, "Share Plot")
+    |> assign(:plot, Plots.get_plot!(id))
+  end
+
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Plot")

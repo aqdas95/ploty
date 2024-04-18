@@ -74,10 +74,13 @@ defmodule PlotyWeb.Router do
         live "/", Index, :index
         live "/new", Index, :new
         live "/:id/edit", Index, :edit
+        live "/:id/share", Index, :share
 
         live "/:id", Show, :show
         live "/:id/show/edit", Show, :edit
       end
+
+      live "/shared", SharedLive.Index
     end
   end
 

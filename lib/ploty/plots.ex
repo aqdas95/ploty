@@ -7,6 +7,7 @@ defmodule Ploty.Plots do
   alias Ploty.Repo
 
   alias Ploty.Plots.Plot
+  alias Ploty.Plots.Shared
 
   @doc """
   Returns the list of plots based on a creator.
@@ -102,5 +103,52 @@ defmodule Ploty.Plots do
   """
   def change_plot(%Plot{} = plot, attrs \\ %{}) do
     Plot.changeset(plot, attrs)
+  end
+
+  @doc """
+  Returns the list of shared plots for a user_id.
+
+  ## Examples
+
+      iex> list_plots(5)
+      [%Plot{creator_id: 5}, ...]
+
+  """
+  def list_shared(user_id) do
+    from(s in Shared, where: s.user_id == ^user_id)
+    |> Repo.all()
+    |> Repo.preload(:plot)
+  end
+
+  @doc """
+  Creates a shared entry for given plot
+
+  ## Examples
+
+      iex> create_shared(goo_value)
+      {:ok, %Shared{}}
+
+      iex> create_shared(plot, bad_value)
+      {:error, %Ecto.Changeset{}}
+
+
+  """
+  def create_shared(params) do
+    %Shared{}
+    |> Shared.changeset(params)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking plot changes.
+
+  ## Examples
+
+      iex> change_shared(shared)
+      %Ecto.Changeset{data: %Shared{}}
+
+  """
+  def change_shared(%Shared{} = shared, attrs \\ %{}) do
+    Shared.changeset(shared, attrs)
   end
 end

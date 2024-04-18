@@ -19,10 +19,10 @@ defmodule PlotyWeb.PlotLive.Show do
   @impl true
   def handle_info({PlotyWeb.PlotLive.FormComponent, {:saved, plot}}, socket) do
     {:noreply,
-      socket
-      |> push_event("update-histogram-#{plot.id}", %{
-        trace: %{x: plot.expression_data}
-      })}
+     socket
+     |> push_event("update-histogram-#{plot.id}", %{
+       trace: %{x: plot.expression_data}
+     })}
   end
 
   defp page_title(:show), do: "Show Plot"

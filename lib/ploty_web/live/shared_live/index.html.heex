@@ -1,0 +1,17 @@
+<.header>
+  Shared with you
+</.header>
+
+<.table id="shared-plots" rows={@streams.shared}>
+  <:col :let={{_id, shared}} label="Attributes">
+    Name: <span class="font-normal"><%= shared.plot.name %></span> <br /> Dataset:
+    <span class="font-normal"><%= shared.plot.dataset %></span> <br /> Expression:
+    <span class="font-normal"><%= shared.plot.expression %></span>
+  </:col>
+  <:col :let={{_id, shared}} label="Graph">
+    <.histogram
+      id={shared.plot.id}
+      series={Jason.encode!(shared.plot.expression_data)}
+    />
+  </:col>
+</.table>

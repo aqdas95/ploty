@@ -7,6 +7,7 @@ defmodule Ploty.Accounts do
   alias Ploty.Repo
 
   alias Ploty.Accounts.{User, UserToken, UserNotifier}
+  alias Ploty.Plots.Plot
 
   ## Database getters
 
@@ -349,5 +350,10 @@ defmodule Ploty.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  def users_to_share_with(%Plot{creator_id: creator_id}) do
+    from(u in User, where: u.id != ^creator_id)
+    |> Repo.all()
   end
 end
