@@ -4,7 +4,10 @@
       <.link class="w-full p-1 pb-6">
         <img src={~p"/images/logo.svg"} width="55" />
       </.link>
-      <.link class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white">
+      <.link
+        href={~p"/plots"}
+        class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white"
+      >
         <.icon name="hero-home" class="w-6 h-6 mr-4" /> Your plots
       </.link>
       <.link class="flex items-center w-full px-1 py-2 my-2 rounded cursor-pointer hover:bg-zinc-700 hover:text-white active:bg-zinc-700 active:text-white">
@@ -32,13 +35,13 @@
   </div>
   <div class="flex flex-col h-screen w-[85%] overflow-hidden">
     <.header class="z-50 p-4 border-b-2 border-gray-200">
-      <%= if Map.has_key?(assigns, :page_title) do %>
-        <%= @page_title %>
+      <%= if Map.has_key?(assigns, :nav_title) do %>
+        <%= @nav_title %>
       <% else %>
         Ploty
       <% end %>
     </.header>
-    <section class="flex flex-1 p-4 overflow-y-auto">
+    <section class="flex flex-col flex-1 p-4 overflow-y-auto">
       <.flash_group flash={@flash} />
       <%= @inner_content %>
     </section>

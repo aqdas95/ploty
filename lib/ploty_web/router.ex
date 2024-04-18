@@ -48,7 +48,7 @@ defmodule PlotyWeb.Router do
   ## Authentication routes
 
   scope "/", PlotyWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
+    pipe_through [:browser]
 
     live_session :redirect_if_user_is_authenticated,
       layout: false,
@@ -63,12 +63,21 @@ defmodule PlotyWeb.Router do
   end
 
   scope "/", PlotyWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser]
 
     live_session :require_authenticated_user,
       on_mount: [{PlotyWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", Auth.UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", Auth.UserSettingsLive, :confirm_email
+
+      scope "/plots", PlotLive do
+        live "/", Index, :index
+        live "/new", Index, :new
+        live "/:id/edit", Index, :edit
+
+        live "/:id", Show, :show
+        live "/:id/show/edit", Show, :edit
+      end
     end
   end
 
