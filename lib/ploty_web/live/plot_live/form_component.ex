@@ -1,6 +1,7 @@
 defmodule PlotyWeb.PlotLive.FormComponent do
   use PlotyWeb, :live_component
 
+  alias Phoenix.LiveView.AsyncResult
   alias Ploty.Plots
 
   @impl true
@@ -20,10 +21,30 @@ defmodule PlotyWeb.PlotLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:dataset]} type="text" label="Dataset" />
-        <.input field={@form[:expression]} type="text" label="Expression" />
+        <span class="text-xs">This is an arbitrary name for the chart and can be any string</span>
+
+        <.input field={@form[:dataset]} phx-debounce="1000" type="text" label="Dataset" />
+        <span class="text-xs">
+          Dataset should be a valid csv file name from
+          &nbsp;<a href="https://github.com/plotly/datasets/tree/master" target="blank">here</a>.
+          <br />
+          <b>Note: Do not add the file extension.</b>
+        </span>
+
+        <.input field={@form[:expression]} phx-debounce="1000" type="text" label="Expression" />
+        <span class="text-xs">Expression should be a valid column name from the selected csv</span>
+
+        <div>
+          <.async_result :let={plots} assign={@plots}>
+            <:loading>Waiting for Preview</:loading>
+            <:failed :let={reason}><%= reason %></:failed>
+
+            <.histogram :if={plots} id={987_789} series={plots} />
+          </.async_result>
+        </div>
+
         <:actions>
-          <.button phx-disable-with="Saving...">Save Plot</.button>
+          <.button :if={@plots.ok?} phx-disable-with="Saving...">Save Plot</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -34,24 +55,111 @@ defmodule PlotyWeb.PlotLive.FormComponent do
   def update(%{plot: plot} = assigns, socket) do
     changeset = Plots.change_plot(plot)
 
+    plots =
+      if assigns.action == :edit do
+        AsyncResult.ok(plot.expression_data)
+      else
+        AsyncResult.loading()
+      end
+
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:plots, plots)
      |> assign_form(changeset)}
   end
 
   @impl true
-  def handle_event("validate", %{"plot" => plot_params}, socket) do
+  def handle_event("validate", %{"plot" => plot_params, "_target" => _target}, socket) do
     changeset =
       socket.assigns.plot
       |> Plots.change_plot(plot_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign_form(socket, changeset)}
+    # If change is only in name then don't re-render
+
+    # if target == ["plot", "name"] do
+    #   {:noreply,
+    #    socket
+    #    |> assign_form(changeset)}
+    # else
+    #   plot = Map.merge(socket.assigns.plot, changeset.changes)
+
+    #   {:noreply,
+    #    socket
+    #    |> assign_form(changeset)
+    #    |> assign(:plots, AsyncResult.loading())
+    #    |> fetch_data(plot)}
+    # end
+
+    plot = Map.merge(socket.assigns.plot, changeset.changes)
+
+    {:noreply,
+     socket
+     |> assign_form(changeset)
+     |> assign(:plots, AsyncResult.loading())
+     |> fetch_data(plot)}
   end
 
-  def handle_event("save", %{"plot" => plot_params}, socket) do
-    save_plot(socket, socket.assigns.action, plot_params)
+  def handle_event("save", %{"plot" => _plot_params}, socket) do
+    save_plot(socket, socket.assigns.action, socket.assigns.form.params)
+  end
+
+  @impl true
+  def handle_async(:fetch_data, {:ok, {:ok, result}}, socket) do
+    %{plots: plots, form: form} = socket.assigns
+
+    changeset =
+      Plots.change_plot(socket.assigns.plot, Map.put(form.params, "expression_data", result))
+
+    {:noreply,
+     socket
+     |> assign(:plots, AsyncResult.ok(plots, result))
+     |> assign_form(changeset)}
+  end
+
+  def handle_async(:fetch_data, {:ok, {:error, reason}}, socket) do
+    %{plots: plots, form: form} = socket.assigns
+
+    invalid_attr = if reason =~ "expression", do: :expression, else: :dataset
+    changeset = Ecto.Changeset.add_error(form.source, invalid_attr, reason)
+
+    {:noreply,
+     socket
+     |> assign(:plots, AsyncResult.failed(plots, reason))
+     |> assign_form(changeset)}
+  end
+
+  defp fetch_data(socket, plot) do
+    socket
+    |> start_async(:fetch_data, fn ->
+      "https://raw.githubusercontent.com/plotly/datasets/master/#{plot.dataset}.csv"
+      |> HTTPoison.get()
+      |> case do
+        {:ok, %HTTPoison.Response{status_code: 200} = resp} ->
+          [headers | data] = resp.body |> String.trim() |> String.split("\n")
+
+          needed_index =
+            headers
+            |> String.split(",")
+            |> Enum.find_index(&(String.trim(&1) == plot.expression))
+
+          if is_nil(needed_index) do
+            {:error, "invalid expression value"}
+          else
+            result =
+              Enum.map(
+                data,
+                &(String.split(&1, ",") |> Enum.at(needed_index) |> String.trim())
+              )
+
+            {:ok, result}
+          end
+
+        _ ->
+          {:error, "invalid dataset value"}
+      end
+    end)
   end
 
   defp save_plot(socket, :edit, plot_params) do

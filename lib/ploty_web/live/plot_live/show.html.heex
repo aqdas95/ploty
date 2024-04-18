@@ -14,9 +14,7 @@
   <:item title="Expression"><%= @plot.expression %></:item>
 </.list>
 
-<.button phx-click="update-plot"> Update Plot </.button>
-
-<.histogram id={@plot.id} series={Jason.encode!([0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 5, 5, 5, 5, 5])} />
+<.histogram id={@plot.id} series={Jason.encode!(@plot.expression_data)} />
 
 <.back navigate={~p"/plots"}>Back to plots</.back>
 

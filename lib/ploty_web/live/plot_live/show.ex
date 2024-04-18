@@ -17,13 +17,11 @@ defmodule PlotyWeb.PlotLive.Show do
   end
 
   @impl true
-  def handle_event("update-plot", _, socket) do
-    plot = socket.assigns.plot
-
+  def handle_info({PlotyWeb.PlotLive.FormComponent, {:saved, plot}}, socket) do
     {:noreply,
       socket
       |> push_event("update-histogram-#{plot.id}", %{
-        trace: %{x: [0, 10, 10, 3, 6, 8, 9, 2, 3, 8, 7, 5, 4, 5, 8, 9, 6, 8, 9, 2, 2, 6, 8]}
+        trace: %{x: plot.expression_data}
       })}
   end
 

@@ -6,6 +6,7 @@ defmodule Ploty.Plots.Plot do
     field :name, :string
     field :dataset, :string
     field :expression, :string
+    field :expression_data, {:array, :string}
     belongs_to :creator, Ploty.Accounts.User
 
     timestamps(type: :utc_datetime)
@@ -14,7 +15,7 @@ defmodule Ploty.Plots.Plot do
   @doc false
   def changeset(plot, attrs) do
     plot
-    |> cast(attrs, [:name, :dataset, :expression, :creator_id])
-    |> validate_required([:name, :dataset, :expression, :creator_id])
+    |> cast(attrs, [:name, :dataset, :expression, :expression_data, :creator_id])
+    |> validate_required([:name, :dataset, :expression, :expression_data, :creator_id])
   end
 end
